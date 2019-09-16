@@ -13,81 +13,75 @@ include("main.jl")
 #Import error function
 include("LossFunctionJordan.jl")
 
-
-#Misc Constants
-const Na=6.023E23
-const C=5e5
-const γ=10E9/Na
-const d=0.0003
-
-function Model!(dy,y,p,t)
-
-  r1=p[1] #IFN induction
-  k1=p[2]
-  tau1=p[25] #IFN mRNA degradation
-  vmax=γ*C*p[3] #IFN diffusion rate
-
-  #STAT1 Constants
-  r2=p[4]
-  k3=p[5]
-  tau2=p[26] #mRNA degradation
-
-  #STATP2n Constants
-  STAT=0.1 #STAT level, constant
-  k4=p[6]
-  K4=p[7]
-  tau3=p[27] #STATp2n dephosphorylation
-
-  #IRF7 Constants
-  k51=p[15]
-  k52=p[8]
-  tau4=p[28] #mRNA degradation
-  k6=p[16] #translation
-
-  #NS1
-  #NS1 is the primary antoginistic protein of influenza
-  r3=p[9]
-  n3=p[10]
-  bm=p[11]
-  NS=(r3*(t^n3)/((bm^n3)+(t^n3))) #NS1 protein kinetics
-
-  #IC1/IC2
-  #IC1/IC2 represent IFNB induction and nuclear mRNA antagonism,respectively
-  sp=p[17] #[IC1]
-  n1=p[18] #[IC1]
-  sv=p[19] #[IC2]
-  n2=p[20] #[IC2]
-  d1=p[21] #[IC1]
-  d2=p[22] #[IC2]
-  IC1=(1+sp*((NS/d1)^n1))/(1+((NS/d1)^n1))
-  IC2=((1+sv*((NS/d2)^n2))/(1+(NS/d2)^n2))
-
+function Model!(dy,y,par,t)
+  #IFN, ODE 1 parameters
+  k11=par[1]
+  RIGI=20
+  k12=par[2]
+  TLR=6
+  n=3
+  k13=par[3]
+  k14=par[4]
+  tau1=0.3
+  #IFN_env, ODE 2 parameters
+  k21=par[5]
+  tau2=0.3
+  #STAT, ODE 3 parameters
+  r31=par[6]
+  k31=par[7]
+  tau3=0.7
+  #STATP, ODE 4 parameters
+  k41=par[8]
+  k42=par[9]
+  tau4=1.2
+  #IRF7, ODE 5 parameters
+  k51=par[10]
+  k52=par[11]
+  tau5=0.7
+  #IRF7P, ODE 6 parameters
+  k61=par[12]
+  tau6=0.7
+  #Target cells, ODE 7 paramters
+  k71=par[13]
+  #Eclipse infected cells, ODE 8 parameters
+  k81=par[14]
+  k82=par[15]
+  #Productive infected cells, ODE 9 parameters
+  k91=par[16]
+  #Viral count, ODE 10 parameters
+  k10_1=par[17]
+  k10_2=par[18]
+  k10_3=par[19]
   #TJ Constants
-  #TJ describes the binding of IFN a/b and SOCS feedback
-  K2=p[13]
-  TJtot=p[12]
-  KTJ1=p[23]
-  KTJ2=p[24]
-  TJ=TJtot*((y[2])/(KTJ1+y[2]))*(1/(1+(KTJ2/d)))
+  #TJ describes the binding of IFN and SOCS feedback
+  TJtot=0.0001
+  k11_1=par[20]
+  k11_2=par[21]
+  TJ=TJtot*(y[2]/(k11_1+y[2])*(1/(1+k11_2))); #Eq. 11
 
   #ODE System
-  dy[1]=r1+k1*y[6]*IC2-y[1]*(log(2)/tau1) #IFN in cytoplasm
-  dy[2]=(vmax*y[1])/(K2+y[1])-y[2]*(log(2)/tau1) #IFN in environment
-  dy[3]=(r2*IC1+k3*y[4])*IC2-y[3]*(log(2)/tau2) #STAT1
-  dy[4]=k4*TJ*STAT/(2*(K4+STAT))-y[4]*log(2)/tau3 #STATP2n
-  dy[5]=(k51*y[4]+k52*y[6])*IC2-y[5]*log(2)/tau4 #IRF7
-  dy[6]=k6*y[5]*IC1-y[6]*log(2)/tau4 #IRF7Pn
+  dy[1]=k11*RIGI*y[10]+(k12*y[10]^n)/(k13+y[10]^n)+k14*y[6]-y[1]*tau1 #IFN in cytoplasm
+  dy[2]=(k21*y[1])-(y[2]*tau2) #IFN in environment
+  dy[3]=r31+k31*y[4]-y[3]*tau3 #STAT in cytoplasm
+  dy[4]=(k41*TJ*y[3])/(k42+y[3])-y[4]*tau4 #STATP
+  dy[5]=k51*y[4]+k52*y[6]-y[5]*tau5 #IRF7
+  dy[6]=k61*y[5]-y[6]*tau6 #IRF7P
+  dy[7]=-k71*y[7]*y[10] #Uninfected target cells
+  dy[8]=k71*y[7]*y[10]-(k81*y[8])/(1+k82*y[2]) #Eclipse infected cells
+  dy[9]=(k81*y[8])/(1+k82*y[2])-k91*y[9] #Productive infected cells
+  dy[10]=(k10_1*y[9])/(1+k10_2*y[2])-k10_3*y[10] #Virus count
+
 end
 
 #parNames = ["a","b","c"]
 #parNum = length(parNames)
-stateNames = ["IFN","IFNenv","STAT1","STATP2n","IRF7","IRF7Pn"]
-parNum = 28
+stateNames = ["IFN","IFNenv","STAT1","STATP2n","IRF7","IRF7Pn","Target","Eclipse","Productive","Virus"]
+parNum = 21
 
 #Define information for ODE model
 p=rand(parNum) #Parameter values
-u0 = [7.9, 0, 262.0, 0.1, 14.0, 0.0] #Initial Conditions
-tspan = (0.25,18.0) #Time (start, end)
+u0 = [0, 0, 0.1, 0, 0, 0, 0, 250000, 0, 7.5E-2] #Initial Conditions
+tspan = (0.25,24.0) #Time (start, end)
 
 #Contruct the ODE Problem
 prob = ODEProblem(Model!,u0,tspan,p)
@@ -98,32 +92,40 @@ sol = solve(prob,alg)
 
 ## Generate data
 
-data = CSV.read("PR8.csv")
+data = CSV.read("C:/Users/Portable/Documents/Julia MCMC/PR8.csv")
 t = convert(Array,data[:Time])
-mock = CSV.read("Control.csv")
+mock = CSV.read("C:/Users/Portable/Documents/Julia MCMC/Control.csv")
+ci = CSV.read("C:/Users/Portable/Documents/Julia MCMC/PR8CI95.csv")
+titer = CSV.read("C:/Users/Portable/Documents/Julia MCMC/ViralTiters.csv")
+t_titer=convert(Array,titer[:Time])
 
-removeCol = [:Time :TLR7 :DDX58]
+removeCol = [:Time :IFN_env] #Strip time and IFN_env from data
 for col in removeCol
   deletecols!(data,col)
   deletecols!(mock,col)
 end
 
+removeCol = [:Time :dNS1PR8] #Strip time from viral titers
+for col in removeCol
+  deletecols!(titer,col)
+end
+
 data = convert(Matrix,data)
 mock = convert(Matrix,mock)
+titer = convert(Matrix,titer)
+ci = convert(Matrix,titer)
 
 #Data points being measured
-measured = [1,3,5]
+measured = [1,3,4,5]
 
 ## Supply prior distributions
 priors = fill(Uniform(0,1), parNum)
 parBounds = fill([0.0, Inf], parNum)
 
-lossFunc = LossLog(t,data,measured,mock)
+lossFunc = LossLog(t,t_titer,data,measured,mock,ci,titer)
 
-sampleNum = Int(1e6)
+sampleNum = Int(1e1)
 result = ptMCMC(prob,alg,priors,parBounds,lossFunc,sampleNum)
-
-
 
 bestPars= dropdims(permutedims(result[1], [1, 3, 2])[argmax(result[2],dims=1),:],dims=1)
 bestChains = [remake(prob;p=bestPars[i,:]) for i=1:size(bestPars,1)]
@@ -164,7 +166,7 @@ for i in eachindex(u0)
 end
 
 
-datafitPlot = plot(ODEplots...,layout=(2,3),size=(1000,600))
+datafitPlot = plot(ODEplots...,layout=(2,5),size=(1000,600))
 
 savefig(datafitPlot,"JordanDataFit.pdf")
 
@@ -172,7 +174,7 @@ savefig(datafitPlot,"JordanDataFit.pdf")
 using AverageShiftedHistograms
 
 #Posterior
-HistData = [plot(ash(result[1][100_000:end,i,1]),title="Par $i") for i=1:parNum]
+HistData = [plot(ash(result[1][1:end,i,1]),title="Par $i") for i=1:parNum]
 histPlot=plot(HistData...,legend=false,size=(2000,1200))
 
 savefig(histPlot,"histPlot.pdf")
