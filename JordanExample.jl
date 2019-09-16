@@ -80,7 +80,7 @@ parNum = 21
 
 #Define information for ODE model
 p=rand(parNum) #Parameter values
-u0 = [0, 0, 0.1, 0, 0, 0, 0, 250000, 0, 7.5E-2] #Initial Conditions
+u0 = [7.94, 0, 262.3, 12.2, 14.15, 0, 0, 250000, 0, 7.5E-2] #Initial Conditions
 tspan = (0.25,24.0) #Time (start, end)
 
 #Contruct the ODE Problem
@@ -92,11 +92,11 @@ sol = solve(prob,alg)
 
 ## Generate data
 
-data = CSV.read("C:/Users/Portable/Documents/Julia MCMC/PR8.csv")
+data = CSV.read("C:/Users/Portable/Documents/GitHub/6StateMCMC/PR8.csv")
 t = convert(Array,data[:Time])
-mock = CSV.read("C:/Users/Portable/Documents/Julia MCMC/Control.csv")
-ci = CSV.read("C:/Users/Portable/Documents/Julia MCMC/PR8CI95.csv")
-titer = CSV.read("C:/Users/Portable/Documents/Julia MCMC/ViralTiters.csv")
+mock = CSV.read("C:/Users/Portable/Documents/GitHub/6StateMCMC/Control.csv")
+ci = CSV.read("C:/Users/Portable/Documents/GitHub/6StateMCMC/PR8CI95.csv")
+titer = CSV.read("C:/Users/Portable/Documents/GitHub/6StateMCMC/ViralTiters.csv")
 t_titer=convert(Array,titer[:Time])
 
 removeCol = [:Time :IFN_env] #Strip time and IFN_env from data
@@ -120,11 +120,14 @@ measured = [1,3,4,5]
 
 ## Supply prior distributions
 priors = fill(Uniform(0,1), parNum)
-parBounds = fill([0.0, Inf], parNum)
+parBounds = fill([0.0, Inf], parNum) #Fill bounds with 0/inf
+parBounds[14]=Float64[0.0, 1.0]; #Modify bounds with known values
+parBounds[16]=Float64[0.0, 1.0];
+parBounds[19]=Float64[0.0, 1.0];
 
 lossFunc = LossLog(t,t_titer,data,measured,mock,ci,titer)
 
-sampleNum = Int(1e1)
+sampleNum = Int(1e6)
 result = ptMCMC(prob,alg,priors,parBounds,lossFunc,sampleNum)
 
 bestPars= dropdims(permutedims(result[1], [1, 3, 2])[argmax(result[2],dims=1),:],dims=1)
@@ -132,6 +135,7 @@ bestChains = [remake(prob;p=bestPars[i,:]) for i=1:size(bestPars,1)]
 chainSols = [solve(problem,alg) for problem in bestChains]
 
 ###############
+cd("C:/Users/Portable/Documents/GitHub/6StateMCMC")
 ODEplots = Vector(undef,length(u0))
 
 mockSplines = [Spline1D(t,mock[:,i];k=1) for i=1:size(mock,2)]

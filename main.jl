@@ -27,7 +27,7 @@ function ptMCMC(prob::DiffEqBase.DEProblem,alg,priors,parBounds,lossFunc,iterati
     logProbCurr = LogLikeLossFunc.(parCurr)
 
     #Create proposal distributions for each parameter to general new guesses
-    σ = 0.2 # "Tuning parameter", i.e. how big are your jumps
+    σ = 10 # "Tuning parameter", i.e. how big are your jumps
 
     #Swap Information
     swapRatio = zeros(iterations) #Acceptance ratio of swaps
