@@ -127,7 +127,7 @@ parBounds[19]=Float64[0.0, 1.0];
 
 lossFunc = LossLog(t,t_titer,data,measured,mock,ci,titer)
 
-sampleNum = Int(1e6)
+sampleNum = Int(1e4)
 result = ptMCMC(prob,alg,priors,parBounds,lossFunc,sampleNum)
 
 bestPars= dropdims(permutedims(result[1], [1, 3, 2])[argmax(result[2],dims=1),:],dims=1)
