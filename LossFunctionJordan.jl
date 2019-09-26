@@ -36,8 +36,8 @@ vtiter = f.vtiter
   @inbounds for i = 1:length(subSol) #Loop through each data time point
     for (j,m) in enumerate(measured) #loop though states
       foo=(maxlog2(subSol[m,i]) - maxlog2(mock[i,j]))
-      refmax = data[i,j]+interval[i,j]
-      refmin = data[i,j]-interval[i,j]
+      refmax = data[i,j]+interval[i,j]*0
+      refmin = data[i,j]-interval[i,j]*0
       sumsq +=(maxlog2(subSol[m,i]) - maxlog2(mock[i,j]) - data[i,j])^2
       if (foo>refmax)
         sumsq +=(foo-refmax)^2 #Above CI error

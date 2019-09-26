@@ -8,7 +8,7 @@ function ptMCMC(prob::DiffEqBase.DEProblem,alg,priors,parBounds,lossFunc,iterati
     #Basic setup for the run
     ###########################
     parNum = length(priors) #Number of parameters
-    chainNum = 1 #number of chains
+    chainNum = 3 #number of chains
     βmin, βmax = [0.1, 1.0] #Bounds for chain temperatures
     β = chainNum==1 ? 1 : range(βmin, βmax, length=chainNum) #assign each chain a temperature
 
@@ -27,7 +27,7 @@ function ptMCMC(prob::DiffEqBase.DEProblem,alg,priors,parBounds,lossFunc,iterati
     logProbCurr = LogLikeLossFunc.(parCurr)
 
     #Create proposal distributions for each parameter to general new guesses
-    σ = 10 # "Tuning parameter", i.e. how big are your jumps
+    σ = 1 # "Tuning parameter", i.e. how big are your jumps
 
     #Swap Information
     swapRatio = zeros(iterations) #Acceptance ratio of swaps
@@ -111,7 +111,7 @@ function MH_MCMC(parCurr,logProbCurr,acceptNum,β,σ,parBounds,LogLikeLossFunc)
     acceptRatio = min(1,exp(β*ΔE + ΔC))
 
 
-    if rand() < acceptRatio #If the acceptance passes...
+    if (rand()*1) < acceptRatio #If the acceptance passes...
         accept = 1
         #Update the current parameters with the proposed parameters
         return parPropose, logProbPropose, accept

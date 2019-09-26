@@ -16,31 +16,29 @@ include("LossFunctionJordan.jl")
 function Model!(dy,y,par,t)
   #IFN, ODE 1 parameters
   k11=par[1]
-  RIGI=20
   k12=par[2]
-  TLR=6
   n=3
   k13=par[3]
   k14=par[4]
-  tau1=0.3
+  tau1=par[22]
   #IFN_env, ODE 2 parameters
   k21=par[5]
-  tau2=0.3
+  tau2=par[23]
   #STAT, ODE 3 parameters
   r31=par[6]
   k31=par[7]
-  tau3=0.7
+  tau3=par[24]
   #STATP, ODE 4 parameters
   k41=par[8]
   k42=par[9]
-  tau4=1.2
+  tau4=par[25]
   #IRF7, ODE 5 parameters
   k51=par[10]
   k52=par[11]
-  tau5=0.7
+  tau5=par[26]
   #IRF7P, ODE 6 parameters
   k61=par[12]
-  tau6=0.7
+  tau6=par[27]
   #Target cells, ODE 7 paramters
   k71=par[13]
   #Eclipse infected cells, ODE 8 parameters
@@ -60,7 +58,7 @@ function Model!(dy,y,par,t)
   TJ=TJtot*(y[2]/(k11_1+y[2])*(1/(1+k11_2))); #Eq. 11
 
   #ODE System
-  dy[1]=k11*RIGI*y[10]+(k12*y[10]^n)/(k13+y[10]^n)+k14*y[6]-y[1]*tau1 #IFN in cytoplasm
+  dy[1]=k11*y[10]+(k12*y[10]^n)/(k13+y[10]^n)+k14*y[6]-y[1]*tau1 #IFN in cytoplasm
   dy[2]=(k21*y[1])-(y[2]*tau2) #IFN in environment
   dy[3]=r31+k31*y[4]-y[3]*tau3 #STAT in cytoplasm
   dy[4]=(k41*TJ*y[3])/(k42+y[3])-y[4]*tau4 #STATP
@@ -76,7 +74,7 @@ end
 #parNames = ["a","b","c"]
 #parNum = length(parNames)
 stateNames = ["IFN","IFNenv","STAT1","STATP2n","IRF7","IRF7Pn","Target","Eclipse","Productive","Virus"]
-parNum = 21
+parNum = 27
 
 #Define information for ODE model
 p=rand(parNum) #Parameter values
@@ -127,7 +125,7 @@ parBounds[19]=Float64[0.0, 1.0];
 
 lossFunc = LossLog(t,t_titer,data,measured,mock,ci,titer)
 
-sampleNum = Int(1e4)
+sampleNum = Int(1e5)
 result = ptMCMC(prob,alg,priors,parBounds,lossFunc,sampleNum)
 
 bestPars= dropdims(permutedims(result[1], [1, 3, 2])[argmax(result[2],dims=1),:],dims=1)
