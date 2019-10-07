@@ -15,7 +15,7 @@ include("LossFunctionJordan.jl")
 
 function Model!(dy,y,par,t)
   #IFN, ODE 1 parameters
-  k11=par[1]
+  k11=0 #PR8, RIGI is assumed antagonized
   k12=par[2]
   n=3
   k13=par[3]
@@ -58,15 +58,17 @@ function Model!(dy,y,par,t)
   TJ=TJtot*(y[2]/(k11_1+y[2])*(1/(1+k11_2))); #Eq. 11
 
   #ODE System
-  dy[1]=k11*y[10]+(k12*y[10]^n)/(k13+y[10]^n)+k14*y[6]-y[1]*tau1 #IFN in cytoplasm
+  v=y[10]/(10^4) #scale virus effects
+  i1=y[8]/(10^4) #scale eclipse cell effects
+  dy[1]=(k11*v)+(k12*(v^n))/(k13+(v^n))+k14*y[6]-y[1]*tau1 #IFN in cytoplasm
   dy[2]=(k21*y[1])-(y[2]*tau2) #IFN in environment
   dy[3]=r31+k31*y[4]-y[3]*tau3 #STAT in cytoplasm
   dy[4]=(k41*TJ*y[3])/(k42+y[3])-y[4]*tau4 #STATP
   dy[5]=k51*y[4]+k52*y[6]-y[5]*tau5 #IRF7
   dy[6]=k61*y[5]-y[6]*tau6 #IRF7P
   dy[7]=-k71*y[7]*y[10] #Uninfected target cells
-  dy[8]=k71*y[7]*y[10]-(k81*y[8])/(1+k82*y[2]) #Eclipse infected cells
-  dy[9]=(k81*y[8])/(1+k82*y[2])-k91*y[9] #Productive infected cells
+  dy[8]=k71*y[7]*y[10]-(k81*i1)/(1+k82*y[2]) #Eclipse infected cells
+  dy[9]=(k81*i1)/(1+k82*y[2])-k91*y[9] #Productive infected cells
   dy[10]=(k10_1*y[9])/(1+k10_2*y[2])-k10_3*y[10] #Virus count
 
 end
