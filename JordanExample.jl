@@ -1,7 +1,7 @@
 using DifferentialEquations,ParameterizedFunctions, DiffEqParamEstim #DiffEq
 using RecursiveArrayTools, StatsBase,Distributions #Vector of Arrays and stats
 using StatsPlots, CSV, DataFrames,Printf,Dierckx,ProgressMeter
-using AverageShiftedHistograms, DelimitedFiles, Statistics
+using AverageShiftedHistograms, DelimitedFiles
 ###########################
 #ToDo
 #Figure out how to deal with parameter boundaries
@@ -60,7 +60,7 @@ parNum =14
 #p=rand(parNum) #Parameter values
 p=[1e-3, 1e-3, 3.6e-5, 0.02, 0.2, 1, 1e-3, 1e-3, 3.6e-4, 3.2e-7, 360, 0.01, 1000, 0.001]
 u0 = [7.939415, 0, 12.2075, 14.14915, 0.001, 1, 6.9e-8] #Initial Conditions
-tspan = (0.25,24.0) #Time (start, end)
+tspan = (0,24.0) #Time (start, end)
 
 #Contruct the ODE Problem
 prob = ODEProblem(Model!,u0,tspan,p)
@@ -101,14 +101,13 @@ parBounds = fill([0.0, Inf], parNum) #Fill bounds with 0/inf
 #Modify bounds with known values
 parBounds[5]=Float64[0.0, 1.0]
 parBounds[12]=Float64[0.0, 0.1]
-parBounds[13]=Float64[0.0, 1e12]
 parBounds[14]=Float64[0.0, 0.1]
 
 lossFunc = LossLog(t,t_titer,data,measured,mock,titer)
 
-burnSamples=Int(1e3)
-stageNum=Int(1e3)
-sampleNum = Int(1e3)
+burnSamples=Int(1e1)
+stageNum=Int(1e1)
+sampleNum = Int(1e1)
 
 #Run a burn-in
 result = ptMCMC(prob,alg,priors,parBounds,lossFunc,burnSamples)
@@ -122,14 +121,14 @@ for i=1:stageNum #Run batches of sampleNum MCMC samples, stageNum times
   pNew=bestPars[1,:]
   global probNew = remake(prob, p=pNew)
 
-  open("chains.csv","a") do io #Write out current parameter set
+  open("chains.csv","a") do io #Write out current best parameter set
     writedlm(io,bestPars[1,:])
   end
   open("acceptRatio.csv","a") do io #Write out acceptance ratio
-    writedlm(io,mean(result[3][:,1]))
+    writedlm(io,result[3][:,1])
   end
 open("energy.csv","a") do io #Write out loss function value
-  writedlm(io,mean(result[2][:,1]))
+  writedlm(io,result[2][:,1])
 end
 
 end
