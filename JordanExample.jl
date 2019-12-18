@@ -1,7 +1,7 @@
 using DifferentialEquations,ParameterizedFunctions, DiffEqParamEstim #DiffEq
 using RecursiveArrayTools, StatsBase,Distributions #Vector of Arrays and stats
 using StatsPlots, CSV, DataFrames,Printf,Dierckx,ProgressMeter
-using AverageShiftedHistograms, DelimitedFiles
+using AverageShiftedHistograms, DelimitedFiles, PyCall
 ###########################
 #ToDo
 #Figure out how to deal with parameter boundaries
@@ -13,6 +13,7 @@ cd(".\\Documents\\GitHub\\6StateMCMC\\")
 include("main.jl")
 #Import error function
 include("LossFunctionJordan.jl")
+include("textalert.jl")
 
 function Model!(dy,y,par,t)
   #IFN, ODE 1 parameters
@@ -181,3 +182,7 @@ savefig(logPostPlot,"logPostPlot.pdf")
 #acceptance Rate
 AcceptPlot = plot(result[3],legend =false,title="Acceptance Rate")
 savefig(AcceptPlot,"AcceptPlot.pdf")
+
+number=("REDACTED")
+message=("Julia has finished job")
+TextAlert(number,message)
