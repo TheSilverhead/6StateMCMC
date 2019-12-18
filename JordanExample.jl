@@ -57,8 +57,8 @@ stateNames = ["IFN","IFNe","STATP","IRF7","IRF7P","Live Cells","Virus"]
 parNum =14
 
 #Define information for ODE model
-#p=rand(parNum) #Parameter values
-p=[1e-3, 1e-3, 3.6e-5, 0.02, 0.2, 1, 1e-3, 1e-3, 3.6e-4, 3.2e-7, 360, 0.01, 1000, 0.001]
+p=rand(parNum) #Parameter values
+#p=[3, 1, 2, 10, 0.5, 20, 5, 2, 1, 0.5, 0.5, 0.1, 0.5, 1]
 #u0 = [7.939415, 0, 12.2075, 14.14915, 0.001, 1, 6.9e-8] #Initial Conditions
 u0 = [0, 0, 0, 0.72205, 0, 1, 6.9e-8] #Shifted Initial Conditions
 tspan = (0,24.0) #Time (start, end)
@@ -100,39 +100,28 @@ measured = [1,3,4]
 priors = fill(Uniform(0,1), parNum)
 parBounds = fill([0.0, Inf], parNum) #Fill bounds with 0/inf
 #Modify bounds with known values
-parBounds[5]=Float64[0.0, 1.0]
-parBounds[12]=Float64[0.0, 0.1]
-parBounds[14]=Float64[0.0, 0.1]
+parBounds[5]=Float64[0.0, 2.0]
+parBounds[12]=Float64[0.0, 1.0]
+parBounds[14]=Float64[0.0, 1.0]
 
 lossFunc = LossLog(t,t_titer,data,measured,mock,titer,shift)
 
-burnSamples=Int(1e1)
-stageNum=Int(1e1)
-sampleNum = Int(1e2)
+sampleNum = Int(1e6)
 
-#Run a burn-in
-result = ptMCMC(prob,alg,priors,parBounds,lossFunc,burnSamples)
+result = ptMCMC(prob,alg,priors,parBounds,lossFunc,sampleNum)
 bestPars= dropdims(permutedims(result[1], [1, 3, 2])[argmax(result[2],dims=1),:],dims=1)
 pNew=bestPars[1,:]
-global probNew = remake(prob, p=pNew) #Remake with burnt parameters
 
-for i=1:stageNum #Run batches of sampleNum MCMC samples, stageNum times
-  result = ptMCMC(probNew,alg,priors,parBounds,lossFunc,sampleNum)
-  bestPars= dropdims(permutedims(result[1], [1, 3, 2])[argmax(result[2],dims=1),:],dims=1)
-  pNew=bestPars[1,:]
-  global probNew = remake(prob, p=pNew)
-
-  open("chains.csv","a") do io #Write out current best parameter set
-    writedlm(io,bestPars[1,:])
-  end
-  open("acceptRatio.csv","a") do io #Write out acceptance ratio
-    writedlm(io,result[3][:,1])
-  end
+open("chains.csv","a") do io #Write out current best parameter set
+  writedlm(io,bestPars[1,:])
+end
+open("acceptRatio.csv","a") do io #Write out acceptance ratio
+  writedlm(io,result[3][:,1])
+end
 open("energy.csv","a") do io #Write out loss function value
   writedlm(io,result[2][:,1])
 end
 
-end
 
 #Pull best results from the best chain
 bestPars= dropdims(permutedims(result[1], [1, 3, 2])[argmax(result[2],dims=1),:],dims=1)
