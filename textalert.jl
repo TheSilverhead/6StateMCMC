@@ -9,7 +9,7 @@ def txt(num,mes):
     from email.mime.multipart import MIMEMultipart
 
     email = "julialangalerts@gmail.com"
-    pas = "REDACTED"
+    pas = "4"
 
     sms_gateway = (str(num)+'@tmomail.net')
     smtp = "smtp.gmail.com"

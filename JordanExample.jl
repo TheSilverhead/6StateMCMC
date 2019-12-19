@@ -103,7 +103,7 @@ parBounds = fill([0.0, Inf], parNum) #Fill bounds with 0/inf
 #Modify bounds with known values
 parBounds[5]=Float64[0.0, 2.0]
 parBounds[12]=Float64[0.0, 1.0]
-parBounds[14]=Float64[0.0, 1.0]
+parBounds[14]=Float64[0.0, 0.2]
 
 lossFunc = LossLog(t,t_titer,data,measured,mock,titer,shift)
 
@@ -113,16 +113,15 @@ result = ptMCMC(prob,alg,priors,parBounds,lossFunc,sampleNum)
 bestPars= dropdims(permutedims(result[1], [1, 3, 2])[argmax(result[2],dims=1),:],dims=1)
 pNew=bestPars[1,:]
 
-open("chains.csv","a") do io #Write out current best parameter set
-  writedlm(io,bestPars[1,:])
-end
-open("acceptRatio.csv","a") do io #Write out acceptance ratio
+
+CSV.write("chainparams.csv",DataFrame(result[1][:,:,1]))
+
+open("acceptRatio.csv","a") do io #Write out acceptance ratios
   writedlm(io,result[3][:,1])
 end
-open("energy.csv","a") do io #Write out loss function value
+open("energy.csv","a") do io #Write out loss function values
   writedlm(io,result[2][:,1])
 end
-
 
 #Pull best results from the best chain
 bestPars= dropdims(permutedims(result[1], [1, 3, 2])[argmax(result[2],dims=1),:],dims=1)
@@ -183,6 +182,6 @@ savefig(logPostPlot,"logPostPlot.pdf")
 AcceptPlot = plot(result[3],legend =false,title="Acceptance Rate")
 savefig(AcceptPlot,"AcceptPlot.pdf")
 
-number=("REDACTED")
+number=("4")
 message=("Julia has finished job")
-TextAlert(number,message)
+#TextAlert(number,message)

@@ -42,7 +42,7 @@ shift=f.shift
 subSol = sol(t_titer)
 
 @inbounds for i = 1:length(subSol) #Loop through each virus time point
-  sumsq += 1000*(titer[i,1]-subSol[7,i])^2 #Virus ssqe, weighted
+  sumsq += 100*(titer[i,1]-subSol[7,i])^2 #Virus ssqe, weighted
 end
 
 return sumsq
