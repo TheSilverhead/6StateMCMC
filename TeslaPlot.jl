@@ -1,7 +1,7 @@
 using DifferentialEquations, CSV, DataFrames, DelimitedFiles, PyCall
 
 cd()
-cd(".\\Documents\\GitHub\\6StateMCMC\\Run1\\")
+cd("C:\\Users\\ChE-IT\\Desktop\\6 State MCMC Results\\Run4")
 
 function Model!(dy,y,par,t)
   #IFN, ODE 1 parameters
@@ -59,9 +59,11 @@ stop=1000000 #Tesla Plot stop
 solMatrix = fill(0.0,(stop-start+1),7,100)
 
 for i=start:stop
+  print("Processing Sample #",i)
   p=chainparams[i,:]
   sol = solve(ProbMaker(Model!,u0,tspan,p),alg)
   solMatrix[(i-start+1),:,:]=sol(tgraph)[:,:]
+  CSV.write("exparams.csv",DataFrame(solMatrix[(i-start+1),:,:]),append=true)
 end
 
 #Call python. Pass solution, add chains to Tesla Plot

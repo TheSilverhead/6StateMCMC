@@ -40,26 +40,26 @@ function Model!(dy,y,par,t)
   #Virus, ODE 7 parameters
   k71=par[13]
   k72=par[14]
+  k73=par[15]
 
-  V=y[7]
   #ODE System
-  dy[1]=k11*RIGI*V+(k12*V^n)/(k13+V^n)+k14*y[5]-k21*y[1]
+  dy[1]=k11*RIGI*y[7]+(k12*y[7]^n)/(k13+y[7]^n)+k14*y[5]-k21*y[1]
   dy[2]=k21*y[1]-tau2*y[2]
   dy[3]=(k31*y[2])/(k32+k33*y[2])-0.3*y[3]
   dy[4]=k41*y[3]+k42*y[5]-0.3*y[4]
   dy[5]=k51*y[4]-0.3*y[5]
   dy[6]=-k61*y[6]*y[7]
-  dy[7]=(k71*y[6]*y[7])/(y[2]+y[7])-k72*y[7]
+  dy[7]=(k71*y[6]*y[7])/(1+k72*(y[2]*7E-5))-k73*y[7]
 end
 
 #parNames = ["a","b","c"]
 #parNum = length(parNames)
 stateNames = ["IFN","IFNe","STATP","IRF7","IRF7P","Live Cells","Virus"]
-parNum =14
+parNum = 15
 
 #Define information for ODE model
-p=rand(parNum) #Parameter values
-#p=[3, 1, 2, 10, 0.5, 20, 5, 2, 1, 0.5, 0.5, 0.1, 0.5, 1]
+#p=rand(parNum) #Parameter values
+p=[3, 1, 2, 10, 0.5, 20, 5, 2, 1, 0.5, 0.5, 0.1, 0.8, 2, 0.01]
 #u0 = [7.939415, 0, 12.2075, 14.14915, 0.001, 1, 6.9e-8] #Initial Conditions
 u0 = [0, 0, 0, 0.72205, 0, 1, 6.9e-8] #Shifted Initial Conditions
 tspan = (0,24.0) #Time (start, end)
@@ -85,7 +85,7 @@ for col in removeCol
   deletecols!(mock,col)
 end
 
-removeCol = [:Experiment :Time :dNS1PR8] #Strip time from viral titers
+removeCol = [:Experiment :Time] #Strip time from viral titers
 for col in removeCol
   deletecols!(titer,col)
 end
@@ -101,13 +101,13 @@ measured = [1,3,4]
 priors = fill(Uniform(0,1), parNum)
 parBounds = fill([0.0, Inf], parNum) #Fill bounds with 0/inf
 #Modify bounds with known values
-parBounds[5]=Float64[0.0, 2.0]
+parBounds[5]=Float64[0.0, 2.5]
 parBounds[12]=Float64[0.0, 1.0]
-parBounds[14]=Float64[0.0, 0.2]
+parBounds[15]=Float64[0.0, 0.5]
 
 lossFunc = LossLog(t,t_titer,data,measured,mock,titer,shift)
 
-sampleNum = Int(1e6)
+sampleNum = Int(1e5)
 
 result = ptMCMC(prob,alg,priors,parBounds,lossFunc,sampleNum)
 bestPars= dropdims(permutedims(result[1], [1, 3, 2])[argmax(result[2],dims=1),:],dims=1)
@@ -182,6 +182,6 @@ savefig(logPostPlot,"logPostPlot.pdf")
 AcceptPlot = plot(result[3],legend =false,title="Acceptance Rate")
 savefig(AcceptPlot,"AcceptPlot.pdf")
 
-number=("4")
-message=("Julia has finished job")
+#number=("4")
+#message=("Julia has finished job")
 #TextAlert(number,message)
