@@ -58,8 +58,8 @@ stateNames = ["IFN","IFNe","STATP","IRF7","IRF7P","Live Cells","Virus"]
 parNum = 15
 
 #Define information for ODE model
-#p=rand(parNum) #Parameter values
-p=[3, 1, 2, 10, 0.5, 20, 5, 2, 1, 0.5, 0.5, 0.1, 0.8, 2, 0.01]
+p=rand(parNum) #Parameter values
+#p=[3, 1, 2, 10, 0.5, 20, 5, 2, 1, 0.5, 0.5, 0.1, 0.8, 2, 0.01]
 #u0 = [7.939415, 0, 12.2075, 14.14915, 0.001, 1, 6.9e-8] #Initial Conditions
 u0 = [0, 0, 0, 0.72205, 0, 1, 6.9e-8] #Shifted Initial Conditions
 tspan = (0,24.0) #Time (start, end)
@@ -98,7 +98,7 @@ titer = convert(Matrix,titer)
 measured = [1,3,4]
 
 ## Supply prior distributions
-priors = fill(Uniform(0,1), parNum)
+priors = fill(Uniform(0,1E1), parNum)
 parBounds = fill([0.0, Inf], parNum) #Fill bounds with 0/inf
 #Modify bounds with known values
 parBounds[5]=Float64[0.0, 2.5]
@@ -107,7 +107,7 @@ parBounds[15]=Float64[0.0, 0.5]
 
 lossFunc = LossLog(t,t_titer,data,measured,mock,titer,shift)
 
-sampleNum = Int(1e5)
+sampleNum = Int(1e4)
 
 result = ptMCMC(prob,alg,priors,parBounds,lossFunc,sampleNum)
 bestPars= dropdims(permutedims(result[1], [1, 3, 2])[argmax(result[2],dims=1),:],dims=1)
