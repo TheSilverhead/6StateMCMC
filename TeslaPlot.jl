@@ -37,34 +37,32 @@ function Model!(dy,y,par,t)
   dy[7]=(k71*y[6]*y[7])/(1+k72*(y[2]*7E-5))-k73*y[7]
 end
 
-chainparams=CSV.read("chainparams.csv") #Read in all sample's parameters
+idx = convert(Matrix,CSV.read("idx.csv",header=false))
+chainparams=convert(Matrix,CSV.read("chainparams.csv")) #Read in all sample's parameters
 stateNames = ["IFN","IFNe","STATP","IRF7","IRF7P","Live Cells","Virus"]
 u0 = [0, 0, 0, 0.72205, 0, 1, 6.9e-8] #Shifted Initial Conditions
-tspan = (0,48.0) #Time (start, end)
+tspan = (0,36.0) #Time (start, end)
 shift= [7.939, 0, 12.2075, 13.4271, 0, 0, 0] #Noise shift on data
 alg = Vern7()   #ODE solver
 logSpace=[1,3,4] #Which outputs should be shown in log2 space?
 #Listen. This looks like trash, ok? But it takes a smooth time array, your desired time points, and makes a sorted, non-duplicated array
-#tgraph = rle(sort(vcat(range(tspan[1],tspan[2],length=100),[0.25,0.5,1,1.5,2,4,6,8,12,18,24])))[1]
-tgraph = [0.25,0.5,1,1.5,2,3,4,6,8,9,12,18,24]
+tgraph = rle(sort(vcat(range(tspan[1],tspan[2],length=100),[0.25,0.5,1,1.5,2,4,6,8,12,18,24])))[1]
+#tgraph = [0.25,0.5,1,1.5,2,3,4,6,8,9,12,18,24]
 
 function ProbMaker(model,u0,tspan,p)
   prob = ODEProblem(model,u0,tspan,p)
   return prob
 end
 
-start=(1) #Tesla Plot start
-stop=1000000 #Tesla Plot stop
+solMatrix = fill(0.0,(length(idx)),7,length(tgraph))
 
-solMatrix = fill(0.0,(stop-start+1),7,length(tgraph))
-
-for i=start:stop
-  print("Processing Sample #",i)
-  p=chainparams[i,:]
+for i in 1:length(idx)
+  p=chainparams[idx[i],:]
   sol = solve(ProbMaker(Model!,u0,tspan,p),alg)
-  solMatrix[(i-start+1),:,:]=sol(tgraph)[:,:]
+  solMatrix[(i),:,:]=sol(tgraph)[:,:]
   #EXported PARAMeters, LONG/SHORT/BEST version
-  CSV.write("exparamlong.csv",DataFrame(solMatrix[(i-start+1),:,:]),append=true)
+  CSV.write("exparamtest.csv",DataFrame(solMatrix[(i),:,:]),append=true)
 end
+
 
 #Call python. Pass solution, add chains to Tesla Plot

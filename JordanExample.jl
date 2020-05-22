@@ -1,7 +1,7 @@
 using DifferentialEquations,ParameterizedFunctions, DiffEqParamEstim #DiffEq
 using RecursiveArrayTools, StatsBase,Distributions #Vector of Arrays and stats
 using StatsPlots, CSV, DataFrames,Printf,Dierckx,ProgressMeter
-using AverageShiftedHistograms, DelimitedFiles, PyCall
+using AverageShiftedHistograms, DelimitedFiles
 ###########################
 #ToDo
 #Figure out how to deal with parameter boundaries
@@ -61,7 +61,7 @@ parNum = 15
 p=rand(parNum) #Parameter values
 #p=[3, 1, 2, 10, 0.5, 20, 5, 2, 1, 0.5, 0.5, 0.1, 0.8, 2, 0.01]
 #u0 = [7.939415, 0, 12.2075, 14.14915, 0.001, 1, 6.9e-8] #Initial Conditions
-u0 = [0, 0, 0, 0.72205, 0, 1, 6.9e-8] #Shifted Initial Conditions
+u0 = [0, 0, 0, 0, 0, 1, 6.9e-8] #Shifted Initial Conditions
 tspan = (0,24.0) #Time (start, end)
 shift= [7.939, 0, 12.2075, 13.4271, 0, 0, 0] #Noise shift on data
 #Contruct the ODE Problem
@@ -98,7 +98,7 @@ titer = convert(Matrix,titer)
 measured = [1,3,4]
 
 ## Supply prior distributions
-priors = fill(Uniform(0,1E1), parNum)
+priors = fill(Uniform(0,1), parNum)
 parBounds = fill([0.0, Inf], parNum) #Fill bounds with 0/inf
 #Modify bounds with known values
 parBounds[5]=Float64[0.0, 2.5]
