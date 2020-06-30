@@ -1,4 +1,4 @@
 # 6StateMCMC
-Markov chain Monte-Carlo for 6 State ODE model
+Parellel Tempering Markov chain Monte-Carlo parameterization for 6 State ODE model
 
-Code from Robert Gregg
+Original code from Robert Gregg.
