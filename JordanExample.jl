@@ -43,10 +43,10 @@ function Model!(dy,y,par,t)
   k73=par[15]
 
   #ODE System
-  dy[1]=k11*RIGI*y[7]+(k12*y[7]^n)/(k13+y[7]^n)+k14*y[5]-k21*y[1]
+  dy[1]=y[6]*(k11*RIGI*y[7]+(k12*y[7]^n)/(k13+y[7]^n)+k14*y[5])-k21*y[1]
   dy[2]=k21*y[1]-tau2*y[2]
-  dy[3]=(k31*y[2])/(k32+k33*y[2])-0.3*y[3]
-  dy[4]=k41*y[3]+k42*y[5]-0.3*y[4]
+  dy[3]=(k31*y[2]*y[6])/(k32+k33*y[2])-0.3*y[3]
+  dy[4]=y[6]*(k41*y[3]+k42*y[5])-0.3*y[4]
   dy[5]=k51*y[4]-0.3*y[5]
   dy[6]=-k61*y[6]*y[7]
   dy[7]=(k71*y[6]*y[7])/(1+k72*(y[2]*7E-5))-k73*y[7]
@@ -59,9 +59,7 @@ parNum = 15
 
 #Define information for ODE model
 p=rand(parNum) #Parameter values
-#p=[3, 1, 2, 10, 0.5, 20, 5, 2, 1, 0.5, 0.5, 0.1, 0.8, 2, 0.01]
-#u0 = [7.939415, 0, 12.2075, 14.14915, 0.001, 1, 6.9e-8] #Initial Conditions
-u0 = [0, 0, 0, 0, 0, 1, 6.9e-8] #Shifted Initial Conditions
+u0 = [0, 0, 0, 0.72205, 0, 1, 6.9e-8] #Shifted Initial Conditions
 tspan = (0,24.0) #Time (start, end)
 shift= [7.939, 0, 12.2075, 13.4271, 0, 0, 0] #Noise shift on data
 #Contruct the ODE Problem
